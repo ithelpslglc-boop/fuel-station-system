@@ -60,7 +60,7 @@ $totalSuppliers = $pdo->query("SELECT COUNT(*) FROM suppliers")->fetchColumn();
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="main-content">
+<div class="page-content">
 
     <h4>Dashboard</h4>
 

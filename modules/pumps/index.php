@@ -34,7 +34,7 @@ $pumps = $stmt->fetchAll();
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="main-content">
+<div class="page-content">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Pump Management</h4>
