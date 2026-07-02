@@ -4,12 +4,27 @@ require_once ROOT_PATH . '/includes/auth.php';
 
 checkAuth();
 
-// Only admin allowed
 if ($_SESSION['user_role'] !== 'admin') {
     die("Access denied");
 }
 
-// Fetch users
+// DELETE USER (safety included)
+if (isset($_GET['delete'])) {
+
+    $deleteId = $_GET['delete'];
+
+    if ($deleteId == $_SESSION['user_id']) {
+        die("You cannot delete your own account");
+    }
+
+    $del = $pdo->prepare("DELETE FROM users WHERE id = ?");
+    $del->execute([$deleteId]);
+
+    header("Location: index.php");
+    exit;
+}
+
+// FETCH USERS
 $stmt = $pdo->prepare("SELECT * FROM users ORDER BY id DESC");
 $stmt->execute();
 $users = $stmt->fetchAll();
@@ -30,6 +45,7 @@ $users = $stmt->fetchAll();
         <div class="card-body">
 
             <table class="table table-bordered table-hover mb-0">
+
                 <thead class="table-dark">
                     <tr>
                         <th>ID</th>
@@ -38,6 +54,7 @@ $users = $stmt->fetchAll();
                         <th>Role</th>
                         <th>Status</th>
                         <th>Last Login</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
 
@@ -45,16 +62,31 @@ $users = $stmt->fetchAll();
                     <?php foreach ($users as $user): ?>
                         <tr>
                             <td><?= $user['id'] ?></td>
-                            <td><?= $user['name'] ?></td>
-                            <td><?= $user['email'] ?></td>
+                            <td><?= htmlspecialchars($user['name']) ?></td>
+                            <td><?= htmlspecialchars($user['email']) ?></td>
                             <td><?= ucfirst($user['role']) ?></td>
                             <td>
                                 <?= $user['status'] ? 'Active' : 'Inactive' ?>
                             </td>
-                            <td><?= $user['last_login'] ?? 'Never' ?></td>
+                            <td>
+                                <?= $user['last_login'] ?? 'Never' ?>
+                            </td>
+
+                            <td>
+                                <a href="edit.php?id=<?= $user['id'] ?>" class="btn btn-warning btn-sm">
+                                    Edit
+                                </a>
+
+                                <a href="index.php?delete=<?= $user['id'] ?>"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Are you sure you want to delete this user?')">
+                                    Delete
+                                </a>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
+
             </table>
 
         </div>
