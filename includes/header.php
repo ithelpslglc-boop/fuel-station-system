@@ -1,11 +1,17 @@
-<?php require_once ROOT_PATH . '/config/config.php'; ?>
+<?php
+require_once ROOT_PATH . '/config/config.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
 
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>FuelDex</title>
@@ -22,69 +28,30 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/style.css">
 
-    <style>
-
-        .top-navbar{
-
-            position:fixed;
-            top:0;
-            left:240px;
-            right:0;
-
-            height:60px;
-
-            background:#fff;
-
-            border-bottom:1px solid #ddd;
-
-            display:flex;
-
-            justify-content:space-between;
-
-            align-items:center;
-
-            padding:0 25px;
-
-            z-index:1000;
-
-        }
-
-        .page-content{
-
-            margin-left:240px;
-            margin-top:60px;
-            padding:20px;
-
-        }
-
-    </style>
-
 </head>
 
 <body>
 
+<!-- TOP NAVBAR -->
 <nav class="top-navbar">
 
-    <h5 class="mb-0">
-        
-    </h5>
+    <div class="d-flex align-items-center justify-content-end w-100">
 
-    <div>
-
-        <span class="me-3">
+        <div class="me-3 text-muted">
             Welcome,
-            <strong><?= htmlspecialchars($_SESSION['user_name'] ?? 'User') ?></strong>
-        </span>
+            <strong>
+                <?= htmlspecialchars($_SESSION['user_name'] ?? 'User') ?>
+            </strong>
+        </div>
 
-        <a href="<?= APP_URL ?>/logout.php"
-           class="btn btn-danger btn-sm">
-
+        <a href="<?= APP_URL ?>/logout.php" class="btn btn-danger btn-sm">
             <i class="bi bi-box-arrow-right"></i>
-
             Logout
-
         </a>
 
     </div>
 
 </nav>
+
+<!-- PAGE WRAPPER START -->
+<div class="app-wrapper">

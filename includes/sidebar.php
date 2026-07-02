@@ -4,113 +4,108 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 ?>
 
-<style>
-    .sidebar {
-        width: 240px;
-        height: 100vh;
-        position: fixed;
-        top: 0;
-        left: 0;
-        background: #000;
-        color: #fff;
-        overflow-y: auto;
-    }
+<div class="sidebar" id="sidebar">
 
-    .sidebar-header {
-        padding: 20px;
-        text-align: center;
-        border-bottom: 1px solid #222;
-    }
-
-    .sidebar-header h4 {
-        margin: 0;
-        font-weight: 600;
-        color: #fff;
-    }
-
-    .sidebar-header .bi-fire {
-        color: #dc3545;
-        margin-right: 8px;
-    }
-
-    .sidebar-menu {
-        padding: 15px 0;
-    }
-
-    .sidebar-menu a {
-        display: block;
-        color: #ddd;
-        text-decoration: none;
-        padding: 12px 20px;
-        transition: 0.2s;
-        font-size: 15px;
-    }
-
-    .sidebar-menu a i {
-        width: 24px;
-        margin-right: 8px;
-    }
-
-    .sidebar-menu a:hover {
-        background: #1f1f1f;
-        color: #fff;
-    }
-
-    .sidebar-menu a.active {
-        background: #dc3545;
-        color: #fff;
-    }
-
-    .main-content {
-        margin-left: 240px;
-        padding: 20px;
-    }
-</style>
-
-<div class="sidebar">
-
+    <!-- HEADER -->
     <div class="sidebar-header">
         <h4>
-            <i class="bi bi-fire"></i>FuelDex
+            <i class="bi bi-fire"></i>
+            <span>FuelDex</span>
         </h4>
     </div>
 
+    <!-- MENU -->
     <div class="sidebar-menu">
 
         <a href="<?= APP_URL ?>/index.php">
-            <i class="bi bi-speedometer2"></i> Dashboard
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard</span>
         </a>
 
         <a href="<?= APP_URL ?>/modules/users/index.php">
-            <i class="bi bi-people-fill"></i> Users
+            <i class="bi bi-people-fill"></i>
+            <span>Users</span>
         </a>
 
         <a href="<?= APP_URL ?>/modules/fuel/index.php">
-            <i class="bi bi-fuel-pump-fill"></i> Fuel
+            <i class="bi bi-fuel-pump-fill"></i>
+            <span>Fuel</span>
         </a>
 
         <a href="<?= APP_URL ?>/modules/pumps/index.php">
-            <i class="bi bi-droplet-half"></i> Pumps
+            <i class="bi bi-droplet-half"></i>
+            <span>Pumps</span>
         </a>
 
         <a href="<?= APP_URL ?>/modules/suppliers/index.php">
-            <i class="bi bi-truck"></i> Suppliers
+            <i class="bi bi-truck"></i>
+            <span>Suppliers</span>
         </a>
 
         <a href="<?= APP_URL ?>/modules/sales/index.php">
-            <i class="bi bi-receipt"></i> Sales
+            <i class="bi bi-receipt"></i>
+            <span>Sales</span>
         </a>
 
         <a href="<?= APP_URL ?>/modules/expenses/index.php">
-            <i class="bi bi-cash-stack"></i> Expenses
+            <i class="bi bi-cash-stack"></i>
+            <span>Expenses</span>
         </a>
 
         <a href="<?= APP_URL ?>/modules/reports/index.php">
-            <i class="bi bi-bar-chart-fill"></i> Reports
+            <i class="bi bi-bar-chart-fill"></i>
+            <span>Reports</span>
         </a>
 
-        <hr class="text-secondary">
+    </div>
+
+    <!-- TOGGLE -->
+    <div class="sidebar-footer">
+
+        <button class="toggle-sidebar" id="toggleSidebar">
+
+            <i class="bi bi-chevron-double-left" id="toggleIcon"></i>
+
+        </button>
 
     </div>
 
 </div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const body = document.body;
+    const toggleBtn = document.getElementById("toggleSidebar");
+    const toggleIcon = document.getElementById("toggleIcon");
+
+    // restore state
+    if (localStorage.getItem("sidebar") === "collapsed") {
+        body.classList.add("sidebar-collapsed");
+
+        toggleIcon.classList.remove("bi-chevron-double-left");
+        toggleIcon.classList.add("bi-chevron-double-right");
+    }
+
+    toggleBtn.addEventListener("click", function () {
+
+        body.classList.toggle("sidebar-collapsed");
+
+        const isCollapsed = body.classList.contains("sidebar-collapsed");
+
+        localStorage.setItem("sidebar", isCollapsed ? "collapsed" : "expanded");
+
+        if (isCollapsed) {
+            toggleIcon.classList.remove("bi-chevron-double-left");
+            toggleIcon.classList.add("bi-chevron-double-right");
+        } else {
+            toggleIcon.classList.remove("bi-chevron-double-right");
+            toggleIcon.classList.add("bi-chevron-double-left");
+        }
+
+    });
+
+});
+
+</script>
