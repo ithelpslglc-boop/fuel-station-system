@@ -4,45 +4,61 @@ if (!isset($_SESSION)) {
 }
 ?>
 
-<div class="bg-dark text-white position-fixed h-100" style="width: 240px;">
+<style>
+    .sidebar {
+        width: 240px;
+        height: 100vh;
+        position: fixed;
+        background: #000000;
+        color: #fff;
+    }
 
-    <div class="p-3 border-bottom">
+    .sidebar a {
+        color: #fff;
+        text-decoration: none;
+        display: block;
+        padding: 10px 15px;
+        border-radius: 6px;
+        margin: 4px 10px;
+    }
+
+    .sidebar a:hover {
+        background: #1f1f1f;
+    }
+
+    .sidebar-header {
+        padding: 15px;
+        border-bottom: 1px solid #222;
+        text-align: center;
+    }
+
+    .main-content {
+        margin-left: 240px;
+        padding: 20px;
+    }
+</style>
+
+<div class="sidebar">
+
+    <div class="sidebar-header">
         <h5 class="mb-0">
-            ⛽ Fuel Station
+            🔥 Fuel Station
         </h5>
-        <small>v3.0 System</small>
+        <small>Management System</small>
     </div>
 
-    <div class="p-2">
-        <a href="<?= APP_URL ?>/index.php" class="d-block text-white p-2 text-decoration-none">
-            <i class="bi bi-speedometer2"></i> Dashboard
-        </a>
+    <a href="<?= APP_URL ?>/index.php">🏠 Dashboard</a>
 
-        <a href="<?= APP_URL ?>/modules/users/index.php" class="d-block text-white p-2 text-decoration-none">
-            <i class="bi bi-people"></i> Users
-        </a>
+    <a href="<?= APP_URL ?>/modules/users/index.php">👤 Users</a>
 
-        <a href="#" class="d-block text-white p-2 text-decoration-none">
-            <i class="bi bi-fuel-pump"></i> Fuel Inventory
-        </a>
+    <a href="#">⛽ Fuel Inventory</a>
 
-        <a href="#" class="d-block text-white p-2 text-decoration-none">
-            <i class="bi bi-truck"></i> Suppliers
-        </a>
+    <a href="#">🚚 Suppliers</a>
 
-        <a href="#" class="d-block text-white p-2 text-decoration-none">
-            <i class="bi bi-cash-stack"></i> Sales
-        </a>
+    <a href="#">💰 Sales</a>
 
-        <a href="#" class="d-block text-white p-2 text-decoration-none">
-            <i class="bi bi-gear"></i> Settings
-        </a>
+    <a href="#">⚙️ Settings</a>
 
-        <hr class="text-white">
-
-        <a href="<?= APP_URL ?>/logout.php" class="d-block text-white p-2 text-decoration-none">
-            <i class="bi bi-box-arrow-right"></i> Logout
-        </a>
-    </div>
+    <a href="<?= APP_URL ?>/logout.php">🚪 Logout</a>
 
 </div>
