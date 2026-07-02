@@ -22,7 +22,7 @@ $users = $stmt->fetchAll();
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Users</h4>
-        <a href="#" class="btn btn-primary btn-sm">+ Add User</a>
+        <a href="create.php" class="btn btn-primary btn-sm">+ Add User</a>
     </div>
 
     <div class="card shadow-sm">
