@@ -9,7 +9,7 @@ if (!isset($_SESSION)) {
         width: 240px;
         height: 100vh;
         position: fixed;
-        background: #000000;
+        background: #000;
         color: #fff;
     }
 
@@ -18,8 +18,8 @@ if (!isset($_SESSION)) {
         text-decoration: none;
         display: block;
         padding: 10px 15px;
-        border-radius: 6px;
         margin: 4px 10px;
+        border-radius: 6px;
     }
 
     .sidebar a:hover {
@@ -41,23 +41,18 @@ if (!isset($_SESSION)) {
 <div class="sidebar">
 
     <div class="sidebar-header">
-        <h5 class="mb-0">
-            🔥 Fuel Station
-        </h5>
+        <h5>🔥 Fuel Station</h5>
         <small>Management System</small>
     </div>
 
     <a href="<?= APP_URL ?>/index.php">🏠 Dashboard</a>
-
     <a href="<?= APP_URL ?>/modules/users/index.php">👤 Users</a>
-
-    <a href="#">⛽ Fuel Inventory</a>
-
-    <a href="#">🚚 Suppliers</a>
-
-    <a href="#">💰 Sales</a>
-
-    <a href="#">⚙️ Settings</a>
+    <a href="<?= APP_URL ?>/modules/fuel/index.php">⛽ Fuel</a>
+    <a href="<?= APP_URL ?>/modules/pumps/index.php">🛢 Pumps</a>
+    <a href="<?= APP_URL ?>/modules/suppliers/index.php">🚚 Suppliers</a>
+    <a href="<?= APP_URL ?>/modules/sales/index.php">💰 Sales</a>
+    <a href="<?= APP_URL ?>/modules/expenses/index.php">📉 Expenses</a>
+    <a href="<?= APP_URL ?>/modules/reports/index.php">📊 Reports</a>
 
     <a href="<?= APP_URL ?>/logout.php">🚪 Logout</a>
 
