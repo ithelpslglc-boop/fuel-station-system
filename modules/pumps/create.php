@@ -21,7 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fuel_type_id = $_POST['fuel_type_id'];
 
     if (empty($pump_name) || empty($fuel_type_id)) {
+
         $error = "All fields are required";
+
     } else {
 
         $stmt = $pdo->prepare("
@@ -29,7 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             VALUES (?, ?)
         ");
 
-        $stmt->execute([$pump_name, $fuel_type_id]);
+        $stmt->execute([
+            $pump_name,
+            $fuel_type_id
+        ]);
 
         header("Location: index.php");
         exit;
@@ -40,38 +45,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="main-content">
+<div class="page-content">
 
-    <h4>Add Pump</h4>
+    <div class="container-fluid">
 
-    <div class="card p-3 shadow-sm mt-3" style="max-width:500px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <?php if ($error): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
-        <?php endif; ?>
+            <h3 class="mb-0">
+                Add Pump
+            </h3>
 
-        <form method="POST">
+            <a href="index.php" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back
+            </a>
 
-            <div class="mb-2">
-                <label>Pump Name</label>
-                <input type="text" name="pump_name" class="form-control" required>
+        </div>
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <?php if ($error): ?>
+
+                    <div class="alert alert-danger">
+
+                        <?= htmlspecialchars($error) ?>
+
+                    </div>
+
+                <?php endif; ?>
+
+                <form method="POST">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Pump Name
+                        </label>
+
+                        <input
+                            type="text"
+                            name="pump_name"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+                            Fuel Type
+                        </label>
+
+                        <select
+                            name="fuel_type_id"
+                            class="form-select"
+                            required>
+
+                            <option value="">
+                                Select Fuel
+                            </option>
+
+                            <?php foreach ($fuels as $fuel): ?>
+
+                                <option value="<?= $fuel['id'] ?>">
+
+                                    <?= htmlspecialchars($fuel['name']) ?>
+
+                                </option>
+
+                            <?php endforeach; ?>
+
+                        </select>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success">
+
+                        <i class="bi bi-check-circle"></i>
+
+                        Create Pump
+
+                    </button>
+
+                </form>
+
             </div>
 
-            <div class="mb-3">
-                <label>Fuel Type</label>
-                <select name="fuel_type_id" class="form-select" required>
-                    <option value="">Select Fuel</option>
-                    <?php foreach ($fuels as $fuel): ?>
-                        <option value="<?= $fuel['id'] ?>">
-                            <?= htmlspecialchars($fuel['name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <button class="btn btn-success w-100">Create Pump</button>
-
-        </form>
+        </div>
 
     </div>
 

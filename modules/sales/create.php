@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($fuel['current_stock'] < $liters) {
 
             $error = "Insufficient fuel stock. Available stock: "
-                . number_format($fuel['current_stock'],2)
+                . number_format($fuel['current_stock'], 2)
                 . " Litres.";
 
         } else {
@@ -121,77 +121,123 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="main-content">
+<div class="page-content">
 
-    <h4>New Sale</h4>
+    <div class="container-fluid">
 
-    <div class="card shadow-sm p-3 mt-3" style="max-width:550px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <?php if($error): ?>
-            <div class="alert alert-danger">
-                <?= htmlspecialchars($error) ?>
+            <h3 class="mb-0">New Sale</h3>
+
+            <a href="index.php" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back
+            </a>
+
+        </div>
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <?php if ($error): ?>
+
+                    <div class="alert alert-danger">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+
+                <?php endif; ?>
+
+                <form method="POST">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Pump
+                        </label>
+
+                        <select
+                            name="pump_id"
+                            class="form-select"
+                            required>
+
+                            <option value="">
+                                Select Pump
+                            </option>
+
+                            <?php foreach ($pumps as $pump): ?>
+
+                                <option value="<?= $pump['id'] ?>">
+
+                                    <?= htmlspecialchars($pump['pump_name']) ?>
+
+                                    -
+
+                                    <?= htmlspecialchars($pump['fuel_name']) ?>
+
+                                    (<?= number_format($pump['current_stock'],2) ?> L)
+
+                                </option>
+
+                            <?php endforeach; ?>
+
+                        </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Litres
+                        </label>
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            name="liters"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+                            Payment Method
+                        </label>
+
+                        <select
+                            name="payment_method"
+                            class="form-select">
+
+                            <option value="cash">
+                                Cash
+                            </option>
+
+                            <option value="card">
+                                Card
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success">
+
+                        <i class="bi bi-check-circle"></i>
+
+                        Complete Sale
+
+                    </button>
+
+                </form>
+
             </div>
-        <?php endif; ?>
 
-        <form method="POST">
-
-            <div class="mb-3">
-                <label class="form-label">Pump</label>
-
-                <select name="pump_id" class="form-select" required>
-
-                    <option value="">Select Pump</option>
-
-                    <?php foreach($pumps as $pump): ?>
-
-                        <option value="<?= $pump['id'] ?>">
-
-                            <?= htmlspecialchars($pump['pump_name']) ?>
-
-                            -
-
-                            <?= htmlspecialchars($pump['fuel_name']) ?>
-
-                            (<?= number_format($pump['current_stock'],2) ?> L)
-
-                        </option>
-
-                    <?php endforeach; ?>
-
-                </select>
-
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Litres</label>
-
-                <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    name="liters"
-                    class="form-control"
-                    required>
-            </div>
-
-            <div class="mb-3">
-
-                <label class="form-label">Payment Method</label>
-
-                <select name="payment_method" class="form-select">
-
-                    <option value="cash">Cash</option>
-                    <option value="card">Card</option>
-
-                </select>
-
-            </div>
-
-            <button class="btn btn-success w-100">
-                Complete Sale
-            </button>
-
-        </form>
+        </div>
 
     </div>
 

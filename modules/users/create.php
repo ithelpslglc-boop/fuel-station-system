@@ -19,9 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
     $role = $_POST['role'];
 
-    // Basic validation
     if (empty($name) || empty($email) || empty($password)) {
+
         $error = "All fields are required";
+
     } else {
 
         // Check duplicate email
@@ -29,19 +30,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check->execute([$email]);
 
         if ($check->rowCount() > 0) {
+
             $error = "Email already exists";
+
         } else {
 
-            // Hash password
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-            // Insert user
             $stmt = $pdo->prepare("
                 INSERT INTO users (name, email, password, role)
                 VALUES (?, ?, ?, ?)
             ");
 
-            $stmt->execute([$name, $email, $hashedPassword, $role]);
+            $stmt->execute([
+                $name,
+                $email,
+                $hashedPassword,
+                $role
+            ]);
 
             header("Location: index.php");
             exit;
@@ -53,44 +59,118 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="main-content">
+<div class="page-content">
 
-    <h4>Add New User</h4>
+    <div class="container-fluid">
 
-    <div class="card shadow-sm p-3 mt-3" style="max-width:500px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <?php if ($error): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
-        <?php endif; ?>
+            <h3 class="mb-0">
+                Add New User
+            </h3>
 
-        <form method="POST">
+            <a href="index.php" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back
+            </a>
 
-            <div class="mb-2">
-                <label>Name</label>
-                <input type="text" name="name" class="form-control" required>
+        </div>
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <?php if ($error): ?>
+
+                    <div class="alert alert-danger">
+
+                        <?= htmlspecialchars($error) ?>
+
+                    </div>
+
+                <?php endif; ?>
+
+                <form method="POST">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Name
+                        </label>
+
+                        <input
+                            type="text"
+                            name="name"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Email
+                        </label>
+
+                        <input
+                            type="email"
+                            name="email"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Password
+                        </label>
+
+                        <input
+                            type="password"
+                            name="password"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+                            Role
+                        </label>
+
+                        <select
+                            name="role"
+                            class="form-select">
+
+                            <option value="staff">
+                                Staff
+                            </option>
+
+                            <option value="admin">
+                                Admin
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success">
+
+                        <i class="bi bi-check-circle"></i>
+
+                        Create User
+
+                    </button>
+
+                </form>
+
             </div>
 
-            <div class="mb-2">
-                <label>Email</label>
-                <input type="email" name="email" class="form-control" required>
-            </div>
-
-            <div class="mb-2">
-                <label>Password</label>
-                <input type="password" name="password" class="form-control" required>
-            </div>
-
-            <div class="mb-3">
-                <label>Role</label>
-                <select name="role" class="form-select">
-                    <option value="staff">Staff</option>
-                    <option value="admin">Admin</option>
-                </select>
-            </div>
-
-            <button class="btn btn-success w-100">Create User</button>
-
-        </form>
+        </div>
 
     </div>
 

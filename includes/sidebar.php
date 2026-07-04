@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <div class="sidebar" id="sidebar">
 
-    <!-- HEADER -->
+    <!-- Sidebar Header -->
     <div class="sidebar-header">
         <h4>
             <i class="bi bi-fire"></i>
@@ -14,7 +14,7 @@ if (session_status() === PHP_SESSION_NONE) {
         </h4>
     </div>
 
-    <!-- MENU -->
+    <!-- Sidebar Menu -->
     <div class="sidebar-menu">
 
         <a href="<?= APP_URL ?>/index.php">
@@ -59,12 +59,19 @@ if (session_status() === PHP_SESSION_NONE) {
 
     </div>
 
-    <!-- TOGGLE -->
+    <!-- Sidebar Footer -->
     <div class="sidebar-footer">
 
-        <button class="toggle-sidebar" id="toggleSidebar">
+        <button
+            class="toggle-sidebar"
+            id="toggleSidebar"
+            title="Collapse / Expand Sidebar">
 
-            <i class="bi bi-chevron-double-left" id="toggleIcon"></i>
+            <i
+                class="bi bi-layout-sidebar-inset"
+                id="toggleIcon"
+                style="font-size:24px;">
+            </i>
 
         </button>
 
@@ -80,28 +87,47 @@ document.addEventListener("DOMContentLoaded", function () {
     const toggleBtn = document.getElementById("toggleSidebar");
     const toggleIcon = document.getElementById("toggleIcon");
 
-    // restore state
+    // Restore previous state
     if (localStorage.getItem("sidebar") === "collapsed") {
+
         body.classList.add("sidebar-collapsed");
 
-        toggleIcon.classList.remove("bi-chevron-double-left");
-        toggleIcon.classList.add("bi-chevron-double-right");
+        toggleIcon.classList.remove("bi-layout-sidebar-inset");
+        toggleIcon.classList.add("bi-layout-sidebar");
+
+        toggleBtn.title = "Expand Sidebar";
+
+    } else {
+
+        toggleBtn.title = "Collapse Sidebar";
+
     }
 
     toggleBtn.addEventListener("click", function () {
 
         body.classList.toggle("sidebar-collapsed");
 
-        const isCollapsed = body.classList.contains("sidebar-collapsed");
+        const collapsed = body.classList.contains("sidebar-collapsed");
 
-        localStorage.setItem("sidebar", isCollapsed ? "collapsed" : "expanded");
+        localStorage.setItem(
+            "sidebar",
+            collapsed ? "collapsed" : "expanded"
+        );
 
-        if (isCollapsed) {
-            toggleIcon.classList.remove("bi-chevron-double-left");
-            toggleIcon.classList.add("bi-chevron-double-right");
+        if (collapsed) {
+
+            toggleIcon.classList.remove("bi-layout-sidebar-inset");
+            toggleIcon.classList.add("bi-layout-sidebar");
+
+            toggleBtn.title = "Expand Sidebar";
+
         } else {
-            toggleIcon.classList.remove("bi-chevron-double-right");
-            toggleIcon.classList.add("bi-chevron-double-left");
+
+            toggleIcon.classList.remove("bi-layout-sidebar");
+            toggleIcon.classList.add("bi-layout-sidebar-inset");
+
+            toggleBtn.title = "Collapse Sidebar";
+
         }
 
     });

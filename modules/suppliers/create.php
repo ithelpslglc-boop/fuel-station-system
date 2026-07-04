@@ -18,7 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address = trim($_POST['address']);
 
     if (empty($name) || empty($contact)) {
+
         $error = "Name and Contact are required";
+
     } else {
 
         $stmt = $pdo->prepare("
@@ -26,7 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             VALUES (?, ?, ?, ?)
         ");
 
-        $stmt->execute([$name, $contact, $email, $address]);
+        $stmt->execute([
+            $name,
+            $contact,
+            $email,
+            $address
+        ]);
 
         header("Location: index.php");
         exit;
@@ -37,41 +44,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="main-content">
+<div class="page-content">
 
-    <h4>Add Supplier</h4>
+    <div class="container-fluid">
 
-    <div class="card p-3 shadow-sm mt-3" style="max-width:500px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <?php if ($error): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
-        <?php endif; ?>
+            <h3 class="mb-0">
+                Add Supplier
+            </h3>
 
-        <form method="POST">
+            <a href="index.php" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back
+            </a>
 
-            <div class="mb-2">
-                <label>Supplier Name</label>
-                <input type="text" name="name" class="form-control" required>
+        </div>
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <?php if ($error): ?>
+
+                    <div class="alert alert-danger">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+
+                <?php endif; ?>
+
+                <form method="POST">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Supplier Name
+                        </label>
+
+                        <input
+                            type="text"
+                            name="name"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Contact Number
+                        </label>
+
+                        <input
+                            type="text"
+                            name="contact"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Email
+                        </label>
+
+                        <input
+                            type="email"
+                            name="email"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+                            Address
+                        </label>
+
+                        <textarea
+                            name="address"
+                            class="form-control"
+                            rows="4"></textarea>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success">
+
+                        <i class="bi bi-check-circle"></i>
+
+                        Save Supplier
+
+                    </button>
+
+                </form>
+
             </div>
 
-            <div class="mb-2">
-                <label>Contact Number</label>
-                <input type="text" name="contact" class="form-control" required>
-            </div>
-
-            <div class="mb-2">
-                <label>Email</label>
-                <input type="email" name="email" class="form-control">
-            </div>
-
-            <div class="mb-3">
-                <label>Address</label>
-                <textarea name="address" class="form-control"></textarea>
-            </div>
-
-            <button class="btn btn-success w-100">Save Supplier</button>
-
-        </form>
+        </div>
 
     </div>
 
