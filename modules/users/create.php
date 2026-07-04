@@ -4,49 +4,49 @@ require_once ROOT_PATH . '/includes/auth.php';
 
 checkAuth();
 
-// Only admin allowed
+// ONLY ADMIN CAN CREATE USERS
 if ($_SESSION['user_role'] !== 'admin') {
     die("Access denied");
 }
 
 $error = '';
 
-// Handle form submit
+// HANDLE FORM SUBMISSION
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $name = trim($_POST['name']);
+    $name  = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $role = $_POST['role'];
+    $status = $_POST['status'];
 
     if (empty($name) || empty($email) || empty($password)) {
-
-        $error = "All fields are required";
-
+        $error = "Name, Email and Password are required";
     } else {
 
-        // Check duplicate email
-        $check = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $check->execute([$email]);
+        // CHECK EMAIL EXISTS
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->execute([$email]);
 
-        if ($check->rowCount() > 0) {
-
+        if ($stmt->fetch()) {
             $error = "Email already exists";
-
         } else {
 
+            // HASH PASSWORD
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
+            // INSERT USER
             $stmt = $pdo->prepare("
-                INSERT INTO users (name, email, password, role)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO users (name, email, password, role, status)
+                VALUES (?, ?, ?, ?, ?)
             ");
 
             $stmt->execute([
                 $name,
                 $email,
                 $hashedPassword,
-                $role
+                $role,
+                $status
             ]);
 
             header("Location: index.php");
@@ -59,119 +59,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="page-content">
+<div class="main-content">
 
-    <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Add User</h4>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="index.php" class="btn btn-secondary btn-sm">
+            ← Back
+        </a>
+    </div>
 
-            <h3 class="mb-0">
-                Add New User
-            </h3>
+    <?php if ($error): ?>
+        <div class="alert alert-danger">
+            <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
 
-            <a href="index.php" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i>
-                Back
-            </a>
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <form method="POST">
+
+                <div class="mb-3">
+                    <label>Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Role</label>
+                    <select name="role" class="form-select">
+                        <option value="admin">Admin</option>
+                        <option value="staff">Staff</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>Status</label>
+                    <select name="status" class="form-select">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-success w-100">
+                    Create User
+                </button>
+
+            </form>
 
         </div>
-
-        <div class="card">
-
-            <div class="card-body">
-
-                <?php if ($error): ?>
-
-                    <div class="alert alert-danger">
-
-                        <?= htmlspecialchars($error) ?>
-
-                    </div>
-
-                <?php endif; ?>
-
-                <form method="POST">
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            Name
-                        </label>
-
-                        <input
-                            type="text"
-                            name="name"
-                            class="form-control"
-                            required>
-
-                    </div>
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            Email
-                        </label>
-
-                        <input
-                            type="email"
-                            name="email"
-                            class="form-control"
-                            required>
-
-                    </div>
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            Password
-                        </label>
-
-                        <input
-                            type="password"
-                            name="password"
-                            class="form-control"
-                            required>
-
-                    </div>
-
-                    <div class="mb-4">
-
-                        <label class="form-label">
-                            Role
-                        </label>
-
-                        <select
-                            name="role"
-                            class="form-select">
-
-                            <option value="staff">
-                                Staff
-                            </option>
-
-                            <option value="admin">
-                                Admin
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                    <button
-                        type="submit"
-                        class="btn btn-success">
-
-                        <i class="bi bi-check-circle"></i>
-
-                        Create User
-
-                    </button>
-
-                </form>
-
-            </div>
-
-        </div>
-
     </div>
 
 </div>

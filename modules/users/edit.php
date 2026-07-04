@@ -4,6 +4,7 @@ require_once ROOT_PATH . '/includes/auth.php';
 
 checkAuth();
 
+// ONLY ADMIN CAN EDIT USERS
 if ($_SESSION['user_role'] !== 'admin') {
     die("Access denied");
 }
@@ -15,7 +16,7 @@ if (!$id) {
     exit;
 }
 
-// Fetch User
+// FETCH USER
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$id]);
 $user = $stmt->fetch();
@@ -26,51 +27,66 @@ if (!$user) {
 
 $error = '';
 
+// HANDLE UPDATE
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $name   = trim($_POST['name']);
-    $email  = trim($_POST['email']);
-    $role   = $_POST['role'];
+    $name  = trim($_POST['name']);
+    $email = trim($_POST['email']);
+    $role = $_POST['role'];
     $status = $_POST['status'];
+    $password = $_POST['password'];
 
     if (empty($name) || empty($email)) {
-
         $error = "Name and Email are required";
-
     } else {
 
-        $check = $pdo->prepare("
-            SELECT id
-            FROM users
-            WHERE email = ?
-            AND id != ?
-        ");
+        // CHECK EMAIL EXISTS (EXCEPT CURRENT USER)
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+        $stmt->execute([$email, $id]);
 
-        $check->execute([$email, $id]);
-
-        if ($check->rowCount() > 0) {
+        if ($stmt->fetch()) {
 
             $error = "Email already exists";
 
         } else {
 
-            $update = $pdo->prepare("
-                UPDATE users
-                SET
-                    name = ?,
-                    email = ?,
-                    role = ?,
-                    status = ?
-                WHERE id = ?
-            ");
+            // IF PASSWORD ENTERED → UPDATE IT
+            if (!empty($password)) {
 
-            $update->execute([
-                $name,
-                $email,
-                $role,
-                $status,
-                $id
-            ]);
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+                $stmt = $pdo->prepare("
+                    UPDATE users
+                    SET name = ?, email = ?, password = ?, role = ?, status = ?
+                    WHERE id = ?
+                ");
+
+                $stmt->execute([
+                    $name,
+                    $email,
+                    $hashedPassword,
+                    $role,
+                    $status,
+                    $id
+                ]);
+
+            } else {
+
+                // WITHOUT PASSWORD CHANGE
+                $stmt = $pdo->prepare("
+                    UPDATE users
+                    SET name = ?, email = ?, role = ?, status = ?
+                    WHERE id = ?
+                ");
+
+                $stmt->execute([
+                    $name,
+                    $email,
+                    $role,
+                    $status,
+                    $id
+                ]);
+            }
 
             header("Location: index.php");
             exit;
@@ -82,129 +98,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="page-content">
+<div class="main-content">
 
-    <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Edit User</h4>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="index.php" class="btn btn-secondary btn-sm">
+            ← Back
+        </a>
+    </div>
 
-            <h3 class="mb-0">
-                Edit User
-            </h3>
+    <?php if ($error): ?>
+        <div class="alert alert-danger">
+            <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
 
-            <a href="index.php" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i>
-                Back
-            </a>
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <form method="POST">
+
+                <div class="mb-3">
+                    <label>Name</label>
+                    <input type="text" name="name"
+                           class="form-control"
+                           value="<?= htmlspecialchars($user['name']) ?>"
+                           required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Email</label>
+                    <input type="email" name="email"
+                           class="form-control"
+                           value="<?= htmlspecialchars($user['email']) ?>"
+                           required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Password (leave blank to keep current)</label>
+                    <input type="password" name="password"
+                           class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label>Role</label>
+                    <select name="role" class="form-select">
+
+                        <option value="admin" <?= $user['role']=='admin'?'selected':'' ?>>
+                            Admin
+                        </option>
+
+                        <option value="staff" <?= $user['role']=='staff'?'selected':'' ?>>
+                            Staff
+                        </option>
+
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>Status</label>
+                    <select name="status" class="form-select">
+
+                        <option value="1" <?= $user['status']==1?'selected':'' ?>>
+                            Active
+                        </option>
+
+                        <option value="0" <?= $user['status']==0?'selected':'' ?>>
+                            Inactive
+                        </option>
+
+                    </select>
+                </div>
+
+                <button class="btn btn-primary w-100">
+                    Update User
+                </button>
+
+            </form>
 
         </div>
-
-        <div class="card">
-
-            <div class="card-body">
-
-                <?php if ($error): ?>
-
-                    <div class="alert alert-danger">
-
-                        <?= htmlspecialchars($error) ?>
-
-                    </div>
-
-                <?php endif; ?>
-
-                <form method="POST">
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            Name
-                        </label>
-
-                        <input
-                            type="text"
-                            name="name"
-                            class="form-control"
-                            value="<?= htmlspecialchars($user['name']) ?>"
-                            required>
-
-                    </div>
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            Email
-                        </label>
-
-                        <input
-                            type="email"
-                            name="email"
-                            class="form-control"
-                            value="<?= htmlspecialchars($user['email']) ?>"
-                            required>
-
-                    </div>
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            Role
-                        </label>
-
-                        <select
-                            name="role"
-                            class="form-select">
-
-                            <option value="staff" <?= $user['role'] == 'staff' ? 'selected' : '' ?>>
-                                Staff
-                            </option>
-
-                            <option value="admin" <?= $user['role'] == 'admin' ? 'selected' : '' ?>>
-                                Admin
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                    <div class="mb-4">
-
-                        <label class="form-label">
-                            Status
-                        </label>
-
-                        <select
-                            name="status"
-                            class="form-select">
-
-                            <option value="1" <?= $user['status'] == 1 ? 'selected' : '' ?>>
-                                Active
-                            </option>
-
-                            <option value="0" <?= $user['status'] == 0 ? 'selected' : '' ?>>
-                                Inactive
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                    <button
-                        type="submit"
-                        class="btn btn-primary">
-
-                        <i class="bi bi-check-circle"></i>
-
-                        Update User
-
-                    </button>
-
-                </form>
-
-            </div>
-
-        </div>
-
     </div>
 
 </div>

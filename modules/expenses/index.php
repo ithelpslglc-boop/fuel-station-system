@@ -4,24 +4,24 @@ require_once ROOT_PATH . '/includes/auth.php';
 
 checkAuth();
 
-// FETCH EXPENSES
-$stmt = $pdo->prepare("SELECT * FROM expenses ORDER BY id DESC");
-$stmt->execute();
+$stmt = $pdo->query("
+    SELECT * FROM expenses
+    ORDER BY expense_date DESC
+");
 $expenses = $stmt->fetchAll();
 ?>
 
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="page-content">
+<div class="main-content">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Expense Management</h4>
-        <a href="create.php" class="btn btn-primary btn-sm">+ Add Expense</a>
+        <h4>Expenses</h4>
+        <a href="create.php" class="btn btn-primary">+ Add Expense</a>
     </div>
 
     <div class="card shadow-sm">
-
         <div class="card-body">
 
             <table class="table table-bordered table-hover">
@@ -33,25 +33,30 @@ $expenses = $stmt->fetchAll();
                         <th>Amount</th>
                         <th>Date</th>
                         <th>Category</th>
+                        <th>Note</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    <?php foreach ($expenses as $exp): ?>
+
+                    <?php foreach ($expenses as $e): ?>
                         <tr>
-                            <td><?= $exp['id'] ?></td>
-                            <td><?= htmlspecialchars($exp['title']) ?></td>
-                            <td><?= number_format($exp['amount'], 2) ?></td>
-                            <td><?= $exp['expense_date'] ?></td>
-                            <td><?= ucfirst($exp['category']) ?></td>
+                            <td><?= $e['id'] ?></td>
+                            <td><?= htmlspecialchars($e['title']) ?></td>
+                            <td><?= number_format($e['amount'], 2) ?></td>
+                            <td><?= $e['expense_date'] ?></td>
+                            <td><?= htmlspecialchars($e['category']) ?></td>
+                            <td><?= htmlspecialchars($e['note']) ?></td>
+
                             <td>
 
-                                <a href="edit.php?id=<?= $exp['id'] ?>" class="btn btn-warning btn-sm">
+                                <a href="edit.php?id=<?= $e['id'] ?>"
+                                   class="btn btn-warning btn-sm">
                                     Edit
                                 </a>
 
-                                <a href="index.php?delete=<?= $exp['id'] ?>"
+                                <a href="delete.php?id=<?= $e['id'] ?>"
                                    class="btn btn-danger btn-sm"
                                    onclick="return confirm('Delete this expense?')">
                                     Delete
@@ -60,12 +65,12 @@ $expenses = $stmt->fetchAll();
                             </td>
                         </tr>
                     <?php endforeach; ?>
+
                 </tbody>
 
             </table>
 
         </div>
-
     </div>
 
 </div>

@@ -20,21 +20,35 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
-// FETCH DATA
-$stmt = $pdo->prepare("SELECT * FROM fuel_types ORDER BY id DESC");
+// FETCH FUEL TYPES
+$stmt = $pdo->prepare("
+    SELECT *
+    FROM fuel_types
+    ORDER BY id DESC
+");
 $stmt->execute();
+
 $fuels = $stmt->fetchAll();
 ?>
 
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="page-content">
+<div class="main-content">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Fuel Inventory</h4>
-        <a href="create.php" class="btn btn-primary btn-sm">+ Add Fuel Type</a>
+
+        <a href="create.php" class="btn btn-primary btn-sm">
+            + Add Fuel Type
+        </a>
     </div>
+
+    <?php if (empty($fuels)): ?>
+        <div class="alert alert-warning">
+            No fuel types found. Please add one.
+        </div>
+    <?php else: ?>
 
     <div class="card shadow-sm">
 
@@ -54,18 +68,36 @@ $fuels = $stmt->fetchAll();
                 </thead>
 
                 <tbody>
+
                     <?php foreach ($fuels as $fuel): ?>
                         <tr>
-                            <td><?= $fuel['id'] ?></td>
-                            <td><?= htmlspecialchars($fuel['name']) ?></td>
-                            <td><?= number_format($fuel['price_per_liter'], 2) ?></td>
-                            <td><?= $fuel['current_stock'] ?></td>
-                            <td>
-                                <?= $fuel['status'] ? 'Active' : 'Inactive' ?>
-                            </td>
-                            <td>
 
-                                <a href="edit.php?id=<?= $fuel['id'] ?>" class="btn btn-warning btn-sm">
+                            <td><?= $fuel['id'] ?></td>
+
+                            <td>
+                                <?= htmlspecialchars($fuel['name']) ?>
+                            </td>
+
+                            <td>
+                                <?= number_format($fuel['price_per_liter'], 2) ?>
+                            </td>
+
+                            <td>
+                                <?= number_format($fuel['current_stock'], 2) ?> L
+                            </td>
+
+                            <td>
+                                <?php if ($fuel['status'] == 1): ?>
+                                    <span class="badge bg-success">Active</span>
+                                <?php else: ?>
+                                    <span class="badge bg-secondary">Inactive</span>
+                                <?php endif; ?>
+                            </td>
+
+                            <td class="d-flex gap-2">
+
+                                <a href="edit.php?id=<?= $fuel['id'] ?>"
+                                   class="btn btn-warning btn-sm">
                                     Edit
                                 </a>
 
@@ -76,8 +108,10 @@ $fuels = $stmt->fetchAll();
                                 </a>
 
                             </td>
+
                         </tr>
                     <?php endforeach; ?>
+
                 </tbody>
 
             </table>
@@ -85,6 +119,8 @@ $fuels = $stmt->fetchAll();
         </div>
 
     </div>
+
+    <?php endif; ?>
 
 </div>
 

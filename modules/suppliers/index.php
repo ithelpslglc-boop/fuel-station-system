@@ -4,40 +4,21 @@ require_once ROOT_PATH . '/includes/auth.php';
 
 checkAuth();
 
-if ($_SESSION['user_role'] !== 'admin') {
-    die("Access denied");
-}
-
-// DELETE SUPPLIER
-if (isset($_GET['delete'])) {
-
-    $id = $_GET['delete'];
-
-    $stmt = $pdo->prepare("DELETE FROM suppliers WHERE id = ?");
-    $stmt->execute([$id]);
-
-    header("Location: index.php");
-    exit;
-}
-
-// FETCH SUPPLIERS
-$stmt = $pdo->prepare("SELECT * FROM suppliers ORDER BY id DESC");
-$stmt->execute();
+$stmt = $pdo->query("SELECT * FROM suppliers ORDER BY id DESC");
 $suppliers = $stmt->fetchAll();
 ?>
 
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="page-content">
+<div class="main-content">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Supplier Management</h4>
-        <a href="create.php" class="btn btn-primary btn-sm">+ Add Supplier</a>
+        <h4>Suppliers</h4>
+        <a href="create.php" class="btn btn-primary">+ Add Supplier</a>
     </div>
 
     <div class="card shadow-sm">
-
         <div class="card-body">
 
             <table class="table table-bordered table-hover">
@@ -54,34 +35,29 @@ $suppliers = $stmt->fetchAll();
                 </thead>
 
                 <tbody>
-                    <?php foreach ($suppliers as $supplier): ?>
-                        <tr>
-                            <td><?= $supplier['id'] ?></td>
-                            <td><?= htmlspecialchars($supplier['name']) ?></td>
-                            <td><?= htmlspecialchars($supplier['contact']) ?></td>
-                            <td><?= htmlspecialchars($supplier['email']) ?></td>
-                            <td><?= $supplier['status'] ? 'Active' : 'Inactive' ?></td>
-                            <td>
 
-                                <a href="edit.php?id=<?= $supplier['id'] ?>" class="btn btn-warning btn-sm">
+                    <?php foreach ($suppliers as $s): ?>
+                        <tr>
+                            <td><?= $s['id'] ?></td>
+                            <td><?= htmlspecialchars($s['name']) ?></td>
+                            <td><?= htmlspecialchars($s['contact']) ?></td>
+                            <td><?= htmlspecialchars($s['email']) ?></td>
+                            <td>
+                                <?= $s['status'] ? 'Active' : 'Inactive' ?>
+                            </td>
+                            <td>
+                                <a href="edit.php?id=<?= $s['id'] ?>" class="btn btn-warning btn-sm">
                                     Edit
                                 </a>
-
-                                <a href="index.php?delete=<?= $supplier['id'] ?>"
-                                   class="btn btn-danger btn-sm"
-                                   onclick="return confirm('Delete this supplier?')">
-                                    Delete
-                                </a>
-
                             </td>
                         </tr>
                     <?php endforeach; ?>
+
                 </tbody>
 
             </table>
 
         </div>
-
     </div>
 
 </div>

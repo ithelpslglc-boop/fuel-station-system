@@ -4,238 +4,139 @@ require_once ROOT_PATH . '/includes/auth.php';
 
 checkAuth();
 
+// DATE FILTER
 $from = $_GET['from'] ?? null;
-$to   = $_GET['to'] ?? null;
+$to = $_GET['to'] ?? null;
 
-/*
-|--------------------------------------------------------------------------
-| TOTAL SALES
-|--------------------------------------------------------------------------
-*/
+// BASE QUERIES
+$salesQuery = "SELECT SUM(total_amount) as total_sales FROM sales";
+$expenseQuery = "SELECT SUM(amount) as total_expenses FROM expenses";
+
+$params = [];
+
 if ($from && $to) {
+    $salesQuery .= " WHERE DATE(created_at) BETWEEN ? AND ?";
+    $expenseQuery .= " WHERE expense_date BETWEEN ? AND ?";
 
-    $stmt = $pdo->prepare("
-        SELECT SUM(total_amount) AS total_sales
-        FROM sales
-        WHERE DATE(created_at) BETWEEN ? AND ?
-    ");
-    $stmt->execute([$from, $to]);
-
-} else {
-
-    $stmt = $pdo->query("
-        SELECT SUM(total_amount) AS total_sales
-        FROM sales
-    ");
+    $params = [$from, $to];
 }
 
+// SALES
+$stmt = $pdo->prepare($salesQuery);
+$stmt->execute($params);
 $totalSales = $stmt->fetch()['total_sales'] ?? 0;
 
-/*
-|--------------------------------------------------------------------------
-| TOTAL EXPENSES
-|--------------------------------------------------------------------------
-*/
-if ($from && $to) {
-
-    $stmt = $pdo->prepare("
-        SELECT SUM(amount) AS total_expenses
-        FROM expenses
-        WHERE expense_date BETWEEN ? AND ?
-    ");
-    $stmt->execute([$from, $to]);
-
-} else {
-
-    $stmt = $pdo->query("
-        SELECT SUM(amount) AS total_expenses
-        FROM expenses
-    ");
-}
-
+// EXPENSES
+$stmt = $pdo->prepare($expenseQuery);
+$stmt->execute($params);
 $totalExpenses = $stmt->fetch()['total_expenses'] ?? 0;
 
+// PROFIT
 $profit = $totalSales - $totalExpenses;
 
-/*
-|--------------------------------------------------------------------------
-| TABLE DATA
-|--------------------------------------------------------------------------
-*/
-if ($from && $to) {
-
-    $salesStmt = $pdo->prepare("
-        SELECT * FROM sales
-        WHERE DATE(created_at) BETWEEN ? AND ?
-        ORDER BY created_at DESC
-    ");
-    $salesStmt->execute([$from, $to]);
-
-    $expenseStmt = $pdo->prepare("
-        SELECT * FROM expenses
-        WHERE expense_date BETWEEN ? AND ?
-        ORDER BY expense_date DESC
-    ");
-    $expenseStmt->execute([$from, $to]);
-
-} else {
-
-    $salesStmt = $pdo->query("
-        SELECT * FROM sales
-        ORDER BY created_at DESC
-    ");
-
-    $expenseStmt = $pdo->query("
-        SELECT * FROM expenses
-        ORDER BY expense_date DESC
-    ");
-}
-
-$salesData = $salesStmt->fetchAll();
-$expenseData = $expenseStmt->fetchAll();
+// TABLE DATA
+$stmt = $pdo->prepare("
+    SELECT 'Sale' as type, created_at as date, total_amount as amount
+    FROM sales
+    UNION ALL
+    SELECT 'Expense' as type, expense_date as date, amount
+    FROM expenses
+    ORDER BY date DESC
+");
+$stmt->execute();
+$records = $stmt->fetchAll();
 ?>
 
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="page-content">
+<div class="main-content">
 
-<div class="container-fluid">
-
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Reports Dashboard</h3>
-    </div>
+    <h4>Reports Dashboard</h4>
 
     <!-- FILTER -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <form method="GET" class="row g-3">
-                <div class="col-md-4">
-                    <input type="date" name="from" class="form-control" value="<?= $from ?>">
-                </div>
-                <div class="col-md-4">
-                    <input type="date" name="to" class="form-control" value="<?= $to ?>">
-                </div>
-                <div class="col-md-4">
-                    <button class="btn btn-primary w-100">Filter</button>
-                </div>
-            </form>
+    <form method="GET" class="card p-3 mb-3">
+        <div class="row">
+
+            <div class="col-md-4">
+                <label>From</label>
+                <input type="date" name="from" class="form-control" value="<?= $from ?>">
+            </div>
+
+            <div class="col-md-4">
+                <label>To</label>
+                <input type="date" name="to" class="form-control" value="<?= $to ?>">
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end">
+                <button class="btn btn-primary w-100">Filter</button>
+            </div>
+
         </div>
-    </div>
+    </form>
 
     <!-- TOGGLE BUTTONS -->
-    <div class="mb-3">
+    <div class="d-flex gap-2 mb-3">
 
-        <button id="btnCharts"
-            class="btn btn-dark"
-            onclick="showView('charts')">
-            📊 Charts
+        <button class="btn btn-primary view-btn active" onclick="showView('charts', this)">
+            Charts
         </button>
 
-        <button id="btnTables"
-            class="btn btn-outline-dark"
-            onclick="showView('tables')">
-            📋 Tables
+        <button class="btn btn-outline-primary view-btn" onclick="showView('table', this)">
+            Table
         </button>
 
     </div>
 
-    <!-- SUMMARY CARDS -->
-    <div class="row mb-3">
-
-        <div class="col-md-4">
-            <div class="card p-3">
-                <h6>Total Sales</h6>
-                <h3><?= number_format($totalSales, 2) ?></h3>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card p-3">
-                <h6>Total Expenses</h6>
-                <h3><?= number_format($totalExpenses, 2) ?></h3>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card p-3">
-                <h6>Net Profit</h6>
-                <h3><?= number_format($profit, 2) ?></h3>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- CHART VIEW -->
+    <!-- =======================
+         CHART VIEW
+    ======================== -->
     <div id="chartsView">
-
-        <div class="card">
-            <div class="card-body">
-                <canvas id="reportChart"></canvas>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- TABLE VIEW -->
-    <div id="tablesView" style="display:none;">
 
         <div class="row">
 
-            <!-- SALES TABLE -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Sales</div>
-                    <div class="card-body table-responsive">
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm">
+                    <h6>Total Sales</h6>
+                    <h3><?= number_format($totalSales, 2) ?></h3>
+                </div>
+            </div>
 
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm">
+                    <h6>Total Expenses</h6>
+                    <h3><?= number_format($totalExpenses, 2) ?></h3>
+                </div>
+            </div>
 
-                            <tbody>
-                                <?php foreach ($salesData as $s): ?>
-                                    <tr>
-                                        <td><?= $s['created_at'] ?></td>
-                                        <td><?= number_format($s['total_amount'], 2) ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm">
+                    <h6>Net Profit</h6>
+                    <h3><?= number_format($profit, 2) ?></h3>
+                </div>
+            </div>
 
+        </div>
+
+        <!-- Simple visual bars -->
+        <div class="card p-3 mt-3">
+
+            <h6>Performance Overview</h6>
+
+            <div class="mb-2">
+                Sales
+                <div class="progress">
+                    <div class="progress-bar bg-success"
+                         style="width: <?= ($totalSales > 0 ? 100 : 0) ?>%">
                     </div>
                 </div>
             </div>
 
-            <!-- EXPENSE TABLE -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Expenses</div>
-                    <div class="card-body table-responsive">
-
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                <?php foreach ($expenseData as $e): ?>
-                                    <tr>
-                                        <td><?= $e['expense_date'] ?></td>
-                                        <td><?= number_format($e['amount'], 2) ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-
-                        </table>
-
+            <div class="mb-2">
+                Expenses
+                <div class="progress">
+                    <div class="progress-bar bg-danger"
+                         style="width: <?= ($totalExpenses > 0 ? 100 : 0) ?>%">
                     </div>
                 </div>
             </div>
@@ -244,65 +145,75 @@ $expenseData = $expenseStmt->fetchAll();
 
     </div>
 
-</div>
+    <!-- =======================
+         TABLE VIEW
+    ======================== -->
+    <div id="tableView" style="display:none;">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <table class="table table-bordered table-hover">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <?php foreach ($records as $r): ?>
+                            <tr>
+                                <td>
+                                    <?php if ($r['type'] == 'Sale'): ?>
+                                        <span class="badge bg-success">Sale</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-danger">Expense</span>
+                                    <?php endif; ?>
+                                </td>
+
+                                <td><?= $r['date'] ?></td>
+
+                                <td><?= number_format($r['amount'], 2) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
-
-<!-- CHART + TOGGLE SCRIPT -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-new Chart(document.getElementById('reportChart'), {
-    type: 'bar',
-    data: {
-        labels: ['Sales', 'Expenses', 'Profit'],
-        datasets: [{
-            data: [
-                <?= (float)$totalSales ?>,
-                <?= (float)$totalExpenses ?>,
-                <?= (float)$profit ?>
-            ],
-            backgroundColor: ['#0d6efd','#dc3545','#198754']
-        }]
-    }
-});
+function showView(view, btn) {
 
-function showView(view) {
+    document.getElementById('chartsView').style.display =
+        (view === 'charts') ? 'block' : 'none';
 
-    const charts = document.getElementById('chartsView');
-    const tables = document.getElementById('tablesView');
+    document.getElementById('tableView').style.display =
+        (view === 'table') ? 'block' : 'none';
 
-    const btnCharts = document.getElementById('btnCharts');
-    const btnTables = document.getElementById('btnTables');
+    // button styles
+    document.querySelectorAll('.view-btn').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-outline-primary');
+        b.classList.remove('active');
+    });
 
-    if (view === 'charts') {
-
-        charts.style.display = 'block';
-        tables.style.display = 'none';
-
-        btnCharts.classList.add('btn-dark');
-        btnCharts.classList.remove('btn-outline-dark');
-
-        btnTables.classList.add('btn-outline-dark');
-        btnTables.classList.remove('btn-dark');
-
-    } else {
-
-        charts.style.display = 'none';
-        tables.style.display = 'block';
-
-        btnTables.classList.add('btn-dark');
-        btnTables.classList.remove('btn-outline-dark');
-
-        btnCharts.classList.add('btn-outline-dark');
-        btnCharts.classList.remove('btn-dark');
-    }
+    btn.classList.add('btn-primary');
+    btn.classList.remove('btn-outline-primary');
+    btn.classList.add('active');
 }
-
-/* default view */
-document.addEventListener('DOMContentLoaded', function () {
-    showView('charts');
-});
 </script>
 
 <?php include ROOT_PATH . '/includes/footer.php'; ?>

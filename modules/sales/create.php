@@ -4,115 +4,63 @@ require_once ROOT_PATH . '/includes/auth.php';
 
 checkAuth();
 
-$error = '';
+$stmt = $pdo->query("SELECT * FROM fuel_types WHERE status = 1");
+$fuels = $stmt->fetchAll();
 
-$stmt = $pdo->prepare("
-    SELECT
-        pumps.id,
-        pumps.pump_name,
-        fuel_types.id AS fuel_id,
-        fuel_types.name AS fuel_name,
-        fuel_types.price_per_liter,
-        fuel_types.current_stock
-    FROM pumps
-    INNER JOIN fuel_types
-        ON pumps.fuel_type_id = fuel_types.id
-    WHERE pumps.status = 1
-    ORDER BY pumps.pump_name
-");
-$stmt->execute();
+$stmt = $pdo->query("SELECT * FROM pumps WHERE status = 1");
 $pumps = $stmt->fetchAll();
+
+$error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $pump_id = (int)$_POST['pump_id'];
-    $liters = (float)$_POST['liters'];
-    $payment_method = $_POST['payment_method'];
+    $fuel_type_id = $_POST['fuel_type_id'];
+    $pump_id = $_POST['pump_id'] ?: null;
+    $liters = $_POST['liters'];
 
-    if ($pump_id <= 0 || $liters <= 0) {
-
-        $error = "Please enter valid details.";
-
+    if (empty($fuel_type_id) || empty($liters)) {
+        $error = "Fuel and liters are required";
     } else {
 
-        $stmt = $pdo->prepare("
-            SELECT
-                fuel_types.id,
-                fuel_types.price_per_liter,
-                fuel_types.current_stock
-            FROM pumps
-            INNER JOIN fuel_types
-                ON pumps.fuel_type_id = fuel_types.id
-            WHERE pumps.id = ?
-        ");
-
-        $stmt->execute([$pump_id]);
+        // get fuel price + stock
+        $stmt = $pdo->prepare("SELECT * FROM fuel_types WHERE id = ?");
+        $stmt->execute([$fuel_type_id]);
         $fuel = $stmt->fetch();
 
         if (!$fuel) {
-
-            $error = "Invalid pump selected.";
-
+            $error = "Invalid fuel type";
         } elseif ($fuel['current_stock'] < $liters) {
-
-            $error = "Insufficient fuel stock. Available stock: "
-                . number_format($fuel['current_stock'], 2)
-                . " Litres.";
-
+            $error = "Not enough stock available";
         } else {
 
             $price = $fuel['price_per_liter'];
             $total = $price * $liters;
 
-            try {
+            // insert sale
+            $stmt = $pdo->prepare("
+                INSERT INTO sales (fuel_type_id, pump_id, liters, price_per_liter, total_amount)
+                VALUES (?, ?, ?, ?, ?)
+            ");
 
-                $pdo->beginTransaction();
+            $stmt->execute([
+                $fuel_type_id,
+                $pump_id,
+                $liters,
+                $price,
+                $total
+            ]);
 
-                // Record Sale
-                $stmt = $pdo->prepare("
-                    INSERT INTO sales
-                    (
-                        pump_id,
-                        fuel_type_id,
-                        liters,
-                        price_per_liter,
-                        total_amount,
-                        payment_method
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ");
+            // reduce stock
+            $stmt = $pdo->prepare("
+                UPDATE fuel_types
+                SET current_stock = current_stock - ?
+                WHERE id = ?
+            ");
 
-                $stmt->execute([
-                    $pump_id,
-                    $fuel['id'],
-                    $liters,
-                    $price,
-                    $total,
-                    $payment_method
-                ]);
+            $stmt->execute([$liters, $fuel_type_id]);
 
-                // Deduct Stock
-                $stmt = $pdo->prepare("
-                    UPDATE fuel_types
-                    SET current_stock = current_stock - ?
-                    WHERE id = ?
-                ");
-
-                $stmt->execute([
-                    $liters,
-                    $fuel['id']
-                ]);
-
-                $pdo->commit();
-
-                header("Location: index.php");
-                exit;
-
-            } catch (Exception $e) {
-
-                $pdo->rollBack();
-                $error = "Unable to complete sale.";
-            }
+            header("Location: index.php");
+            exit;
         }
     }
 }
@@ -121,125 +69,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="page-content">
+<div class="main-content">
 
-    <div class="container-fluid">
+    <h4>New Sale</h4>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <?php if ($error): ?>
+        <div class="alert alert-danger"><?= $error ?></div>
+    <?php endif; ?>
 
-            <h3 class="mb-0">New Sale</h3>
+    <form method="POST" class="card p-3">
 
-            <a href="index.php" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i>
-                Back
-            </a>
-
+        <div class="mb-2">
+            <label>Fuel Type</label>
+            <select name="fuel_type_id" class="form-select" required>
+                <option value="">Select Fuel</option>
+                <?php foreach ($fuels as $f): ?>
+                    <option value="<?= $f['id'] ?>">
+                        <?= htmlspecialchars($f['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
-        <div class="card">
-
-            <div class="card-body">
-
-                <?php if ($error): ?>
-
-                    <div class="alert alert-danger">
-                        <?= htmlspecialchars($error) ?>
-                    </div>
-
-                <?php endif; ?>
-
-                <form method="POST">
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            Pump
-                        </label>
-
-                        <select
-                            name="pump_id"
-                            class="form-select"
-                            required>
-
-                            <option value="">
-                                Select Pump
-                            </option>
-
-                            <?php foreach ($pumps as $pump): ?>
-
-                                <option value="<?= $pump['id'] ?>">
-
-                                    <?= htmlspecialchars($pump['pump_name']) ?>
-
-                                    -
-
-                                    <?= htmlspecialchars($pump['fuel_name']) ?>
-
-                                    (<?= number_format($pump['current_stock'],2) ?> L)
-
-                                </option>
-
-                            <?php endforeach; ?>
-
-                        </select>
-
-                    </div>
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            Litres
-                        </label>
-
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            name="liters"
-                            class="form-control"
-                            required>
-
-                    </div>
-
-                    <div class="mb-4">
-
-                        <label class="form-label">
-                            Payment Method
-                        </label>
-
-                        <select
-                            name="payment_method"
-                            class="form-select">
-
-                            <option value="cash">
-                                Cash
-                            </option>
-
-                            <option value="card">
-                                Card
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                    <button
-                        type="submit"
-                        class="btn btn-success">
-
-                        <i class="bi bi-check-circle"></i>
-
-                        Complete Sale
-
-                    </button>
-
-                </form>
-
-            </div>
-
+        <div class="mb-2">
+            <label>Pump (optional)</label>
+            <select name="pump_id" class="form-select">
+                <option value="">None</option>
+                <?php foreach ($pumps as $p): ?>
+                    <option value="<?= $p['id'] ?>">
+                        <?= htmlspecialchars($p['pump_name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
-    </div>
+        <div class="mb-3">
+            <label>Liters</label>
+            <input type="number" step="0.01" name="liters" class="form-control" required>
+        </div>
+
+        <button class="btn btn-success w-100">Complete Sale</button>
+
+    </form>
 
 </div>
 
