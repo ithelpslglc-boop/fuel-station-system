@@ -15,7 +15,7 @@ if (!$id) {
     exit;
 }
 
-// FETCH SUPPLIER
+// Fetch Supplier
 $stmt = $pdo->prepare("SELECT * FROM suppliers WHERE id = ?");
 $stmt->execute([$id]);
 $supplier = $stmt->fetch();
@@ -35,16 +35,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $_POST['status'];
 
     if (empty($name) || empty($contact)) {
-        $error = "Name and Contact are required";
+
+        $error = "Supplier Name and Contact are required.";
+
     } else {
 
         $stmt = $pdo->prepare("
             UPDATE suppliers
-            SET name = ?, contact = ?, email = ?, address = ?, status = ?
+            SET
+                name = ?,
+                contact = ?,
+                email = ?,
+                address = ?,
+                status = ?
             WHERE id = ?
         ");
 
-        $stmt->execute([$name, $contact, $email, $address, $status, $id]);
+        $stmt->execute([
+            $name,
+            $contact,
+            $email,
+            $address,
+            $status,
+            $id
+        ]);
 
         header("Location: index.php");
         exit;
@@ -55,52 +69,131 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="main-content">
+<div class="page-content">
 
-    <h4>Edit Supplier</h4>
+    <div class="container-fluid">
 
-    <div class="card p-3 shadow-sm mt-3" style="max-width:500px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <?php if ($error): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
-        <?php endif; ?>
+            <h3 class="mb-0">
+                Edit Supplier
+            </h3>
 
-        <form method="POST">
+            <a href="index.php" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back
+            </a>
 
-            <div class="mb-2">
-                <label>Name</label>
-                <input type="text" name="name" class="form-control"
-                       value="<?= htmlspecialchars($supplier['name']) ?>" required>
+        </div>
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <?php if ($error): ?>
+
+                    <div class="alert alert-danger">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+
+                <?php endif; ?>
+
+                <form method="POST">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Supplier Name
+                        </label>
+
+                        <input
+                            type="text"
+                            name="name"
+                            class="form-control"
+                            value="<?= htmlspecialchars($supplier['name']) ?>"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Contact Number
+                        </label>
+
+                        <input
+                            type="text"
+                            name="contact"
+                            class="form-control"
+                            value="<?= htmlspecialchars($supplier['contact']) ?>"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Email
+                        </label>
+
+                        <input
+                            type="email"
+                            name="email"
+                            class="form-control"
+                            value="<?= htmlspecialchars($supplier['email']) ?>">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Address
+                        </label>
+
+                        <textarea
+                            name="address"
+                            class="form-control"
+                            rows="4"><?= htmlspecialchars($supplier['address']) ?></textarea>
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+                            Status
+                        </label>
+
+                        <select
+                            name="status"
+                            class="form-select">
+
+                            <option value="1" <?= $supplier['status'] == 1 ? 'selected' : '' ?>>
+                                Active
+                            </option>
+
+                            <option value="0" <?= $supplier['status'] == 0 ? 'selected' : '' ?>>
+                                Inactive
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary">
+
+                        <i class="bi bi-check-circle"></i>
+
+                        Update Supplier
+
+                    </button>
+
+                </form>
+
             </div>
 
-            <div class="mb-2">
-                <label>Contact</label>
-                <input type="text" name="contact" class="form-control"
-                       value="<?= htmlspecialchars($supplier['contact']) ?>" required>
-            </div>
-
-            <div class="mb-2">
-                <label>Email</label>
-                <input type="email" name="email" class="form-control"
-                       value="<?= htmlspecialchars($supplier['email']) ?>">
-            </div>
-
-            <div class="mb-2">
-                <label>Address</label>
-                <textarea name="address" class="form-control"><?= htmlspecialchars($supplier['address']) ?></textarea>
-            </div>
-
-            <div class="mb-3">
-                <label>Status</label>
-                <select name="status" class="form-select">
-                    <option value="1" <?= $supplier['status'] == 1 ? 'selected' : '' ?>>Active</option>
-                    <option value="0" <?= $supplier['status'] == 0 ? 'selected' : '' ?>>Inactive</option>
-                </select>
-            </div>
-
-            <button class="btn btn-primary w-100">Update Supplier</button>
-
-        </form>
+        </div>
 
     </div>
 

@@ -11,7 +11,7 @@ if (!$id) {
     exit;
 }
 
-// FETCH EXPENSE
+// Fetch Expense
 $stmt = $pdo->prepare("SELECT * FROM expenses WHERE id = ?");
 $stmt->execute([$id]);
 $exp = $stmt->fetch();
@@ -28,19 +28,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $amount = $_POST['amount'];
     $date = $_POST['expense_date'];
     $category = $_POST['category'];
-    $note = $_POST['note'];
+    $note = trim($_POST['note']);
 
     if (empty($title) || empty($amount) || empty($date)) {
+
         $error = "Required fields missing";
+
     } else {
 
         $stmt = $pdo->prepare("
             UPDATE expenses
-            SET title = ?, amount = ?, expense_date = ?, category = ?, note = ?
+            SET
+                title = ?,
+                amount = ?,
+                expense_date = ?,
+                category = ?,
+                note = ?
             WHERE id = ?
         ");
 
-        $stmt->execute([$title, $amount, $date, $category, $note, $id]);
+        $stmt->execute([
+            $title,
+            $amount,
+            $date,
+            $category,
+            $note,
+            $id
+        ]);
 
         header("Location: index.php");
         exit;
@@ -51,54 +65,141 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
 
-<div class="main-content">
+<div class="page-content">
 
-    <h4>Edit Expense</h4>
+    <div class="container-fluid">
 
-    <div class="card p-3 shadow-sm mt-3" style="max-width:500px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <?php if ($error): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
-        <?php endif; ?>
+            <h3 class="mb-0">
+                Edit Expense
+            </h3>
 
-        <form method="POST">
+            <a href="index.php" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back
+            </a>
 
-            <div class="mb-2">
-                <label>Title</label>
-                <input type="text" name="title" class="form-control"
-                       value="<?= htmlspecialchars($exp['title']) ?>" required>
+        </div>
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <?php if ($error): ?>
+
+                    <div class="alert alert-danger">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+
+                <?php endif; ?>
+
+                <form method="POST">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Title
+                        </label>
+
+                        <input
+                            type="text"
+                            name="title"
+                            class="form-control"
+                            value="<?= htmlspecialchars($exp['title']) ?>"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Amount
+                        </label>
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            name="amount"
+                            class="form-control"
+                            value="<?= htmlspecialchars($exp['amount']) ?>"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Date
+                        </label>
+
+                        <input
+                            type="date"
+                            name="expense_date"
+                            class="form-control"
+                            value="<?= htmlspecialchars($exp['expense_date']) ?>"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Category
+                        </label>
+
+                        <select
+                            name="category"
+                            class="form-select">
+
+                            <option value="electricity" <?= $exp['category'] == 'electricity' ? 'selected' : '' ?>>
+                                Electricity
+                            </option>
+
+                            <option value="maintenance" <?= $exp['category'] == 'maintenance' ? 'selected' : '' ?>>
+                                Maintenance
+                            </option>
+
+                            <option value="salary" <?= $exp['category'] == 'salary' ? 'selected' : '' ?>>
+                                Salary
+                            </option>
+
+                            <option value="other" <?= $exp['category'] == 'other' ? 'selected' : '' ?>>
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+                            Note
+                        </label>
+
+                        <textarea
+                            name="note"
+                            class="form-control"
+                            rows="4"><?= htmlspecialchars($exp['note']) ?></textarea>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary">
+
+                        <i class="bi bi-check-circle"></i>
+
+                        Update Expense
+
+                    </button>
+
+                </form>
+
             </div>
 
-            <div class="mb-2">
-                <label>Amount</label>
-                <input type="number" step="0.01" name="amount" class="form-control"
-                       value="<?= $exp['amount'] ?>" required>
-            </div>
-
-            <div class="mb-2">
-                <label>Date</label>
-                <input type="date" name="expense_date" class="form-control"
-                       value="<?= $exp['expense_date'] ?>" required>
-            </div>
-
-            <div class="mb-2">
-                <label>Category</label>
-                <select name="category" class="form-select">
-                    <option value="electricity" <?= $exp['category']=='electricity'?'selected':'' ?>>Electricity</option>
-                    <option value="maintenance" <?= $exp['category']=='maintenance'?'selected':'' ?>>Maintenance</option>
-                    <option value="salary" <?= $exp['category']=='salary'?'selected':'' ?>>Salary</option>
-                    <option value="other" <?= $exp['category']=='other'?'selected':'' ?>>Other</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label>Note</label>
-                <textarea name="note" class="form-control"><?= htmlspecialchars($exp['note']) ?></textarea>
-            </div>
-
-            <button class="btn btn-primary w-100">Update Expense</button>
-
-        </form>
+        </div>
 
     </div>
 
