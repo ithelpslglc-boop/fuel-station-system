@@ -17,7 +17,6 @@ $params = [];
 if ($from && $to) {
     $salesQuery .= " WHERE DATE(created_at) BETWEEN ? AND ?";
     $expenseQuery .= " WHERE expense_date BETWEEN ? AND ?";
-
     $params = [$from, $to];
 }
 
@@ -43,12 +42,16 @@ $stmt = $pdo->prepare("
     FROM expenses
     ORDER BY date DESC
 ");
+
 $stmt->execute();
 $records = $stmt->fetchAll();
 ?>
 
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php include ROOT_PATH . '/includes/sidebar.php'; ?>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="main-content">
 
@@ -60,12 +63,12 @@ $records = $stmt->fetchAll();
 
             <div class="col-md-4">
                 <label>From</label>
-                <input type="date" name="from" class="form-control" value="<?= $from ?>">
+                <input type="date" name="from" class="form-control" value="<?= htmlspecialchars($from) ?>">
             </div>
 
             <div class="col-md-4">
                 <label>To</label>
-                <input type="date" name="to" class="form-control" value="<?= $to ?>">
+                <input type="date" name="to" class="form-control" value="<?= htmlspecialchars($to) ?>">
             </div>
 
             <div class="col-md-4 d-flex align-items-end">
@@ -118,28 +121,12 @@ $records = $stmt->fetchAll();
 
         </div>
 
-        <!-- Simple visual bars -->
+        <!-- BAR CHART -->
         <div class="card p-3 mt-3">
 
             <h6>Performance Overview</h6>
 
-            <div class="mb-2">
-                Sales
-                <div class="progress">
-                    <div class="progress-bar bg-success"
-                         style="width: <?= ($totalSales > 0 ? 100 : 0) ?>%">
-                    </div>
-                </div>
-            </div>
-
-            <div class="mb-2">
-                Expenses
-                <div class="progress">
-                    <div class="progress-bar bg-danger"
-                         style="width: <?= ($totalExpenses > 0 ? 100 : 0) ?>%">
-                    </div>
-                </div>
-            </div>
+            <canvas id="salesChart" height="100"></canvas>
 
         </div>
 
@@ -168,6 +155,7 @@ $records = $stmt->fetchAll();
 
                         <?php foreach ($records as $r): ?>
                             <tr>
+
                                 <td>
                                     <?php if ($r['type'] == 'Sale'): ?>
                                         <span class="badge bg-success">Sale</span>
@@ -176,9 +164,10 @@ $records = $stmt->fetchAll();
                                     <?php endif; ?>
                                 </td>
 
-                                <td><?= $r['date'] ?></td>
+                                <td><?= htmlspecialchars($r['date']) ?></td>
 
                                 <td><?= number_format($r['amount'], 2) ?></td>
+
                             </tr>
                         <?php endforeach; ?>
 
@@ -194,6 +183,7 @@ $records = $stmt->fetchAll();
 
 </div>
 
+<!-- JS -->
 <script>
 function showView(view, btn) {
 
@@ -203,7 +193,6 @@ function showView(view, btn) {
     document.getElementById('tableView').style.display =
         (view === 'table') ? 'block' : 'none';
 
-    // button styles
     document.querySelectorAll('.view-btn').forEach(b => {
         b.classList.remove('btn-primary');
         b.classList.add('btn-outline-primary');
@@ -214,6 +203,47 @@ function showView(view, btn) {
     btn.classList.remove('btn-outline-primary');
     btn.classList.add('active');
 }
+
+/*
+|--------------------------------------------------------------------------
+| CHART.JS BAR CHART
+|--------------------------------------------------------------------------
+*/
+
+const ctx = document.getElementById('salesChart').getContext('2d');
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Sales', 'Expenses'],
+        datasets: [{
+            label: 'Amount',
+            data: [<?= $totalSales ?>, <?= $totalExpenses ?>],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.7)',
+                'rgba(220, 53, 69, 0.7)'
+            ],
+            borderColor: [
+                'rgba(40, 167, 69, 1)',
+                'rgba(220, 53, 69, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
 </script>
 
 <?php include ROOT_PATH . '/includes/footer.php'; ?>
