@@ -4,26 +4,54 @@ require_once ROOT_PATH . '/includes/auth.php';
 
 checkAuth();
 
-$stmt = $pdo->query("SELECT * FROM fuel_types WHERE status = 1");
-$fuels = $stmt->fetchAll();
+if ($_SESSION['user_role'] !== 'admin') {
+    die("Access denied");
+}
 
-$error = '';
+$error = "";
+
+/*
+|--------------------------------------------------------------------------
+| LOAD TANKS
+|--------------------------------------------------------------------------
+*/
+
+$stmt = $pdo->prepare("
+    SELECT fuel_tanks.*, fuel_types.name AS fuel_name
+    FROM fuel_tanks
+    INNER JOIN fuel_types ON fuel_tanks.fuel_type_id = fuel_types.id
+    WHERE fuel_tanks.status = 1
+");
+
+$stmt->execute();
+$tanks = $stmt->fetchAll();
+
+/*
+|--------------------------------------------------------------------------
+| CREATE PUMP
+|--------------------------------------------------------------------------
+*/
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $pump_name = trim($_POST['pump_name']);
-    $fuel_type_id = $_POST['fuel_type_id'];
+    $tank_id   = (int)$_POST['tank_id'];
+    $status    = (int)$_POST['status'];
 
-    if (empty($pump_name) || empty($fuel_type_id)) {
-        $error = "All fields required";
+    if (empty($pump_name) || empty($tank_id)) {
+        $error = "Pump name and tank are required.";
     } else {
 
         $stmt = $pdo->prepare("
-            INSERT INTO pumps (pump_name, fuel_type_id)
-            VALUES (?, ?)
+            INSERT INTO pumps (pump_name, tank_id, status)
+            VALUES (?, ?, ?)
         ");
 
-        $stmt->execute([$pump_name, $fuel_type_id]);
+        $stmt->execute([
+            $pump_name,
+            $tank_id,
+            $status
+        ]);
 
         header("Location: index.php");
         exit;
@@ -36,34 +64,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="main-content">
 
-    <h4>Add Pump</h4>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Add Pump</h4>
+        <a href="index.php" class="btn btn-secondary btn-sm">Back</a>
+    </div>
 
-    <?php if ($error): ?>
-        <div class="alert alert-danger"><?= $error ?></div>
-    <?php endif; ?>
+    <div class="card shadow-sm">
+        <div class="card-body">
 
-    <form method="POST" class="card p-3">
+            <?php if ($error): ?>
+                <div class="alert alert-danger">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
 
-        <div class="mb-2">
-            <label>Pump Name</label>
-            <input type="text" name="pump_name" class="form-control" required>
+            <form method="POST">
+
+                <div class="mb-3">
+                    <label>Pump Name</label>
+                    <input type="text" name="pump_name" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Tank</label>
+                    <select name="tank_id" class="form-select" required>
+                        <option value="">Select Tank</option>
+
+                        <?php foreach ($tanks as $tank): ?>
+                            <option value="<?= $tank['id'] ?>">
+                                <?= htmlspecialchars($tank['tank_name']) ?>
+                                (<?= htmlspecialchars($tank['fuel_name']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>Status</label>
+                    <select name="status" class="form-select">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-success">Save Pump</button>
+
+            </form>
+
         </div>
-
-        <div class="mb-3">
-            <label>Fuel Type</label>
-            <select name="fuel_type_id" class="form-select" required>
-                <option value="">Select Fuel</option>
-                <?php foreach ($fuels as $fuel): ?>
-                    <option value="<?= $fuel['id'] ?>">
-                        <?= htmlspecialchars($fuel['name']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <button class="btn btn-success w-100">Save Pump</button>
-
-    </form>
+    </div>
 
 </div>
 

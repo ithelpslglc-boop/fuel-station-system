@@ -4,18 +4,25 @@ require_once ROOT_PATH . '/includes/auth.php';
 
 checkAuth();
 
-// FETCH PUMPS WITH FUEL NAME
+/*
+|--------------------------------------------------------------------------
+| FETCH PUMPS WITH TANK + FUEL INFO
+|--------------------------------------------------------------------------
+*/
+
 $stmt = $pdo->prepare("
-    SELECT 
+    SELECT
         pumps.*,
+        fuel_tanks.tank_name,
+        fuel_tanks.current_level,
         fuel_types.name AS fuel_name
     FROM pumps
-    INNER JOIN fuel_types 
-        ON pumps.fuel_type_id = fuel_types.id
+    INNER JOIN fuel_tanks ON pumps.tank_id = fuel_tanks.id
+    INNER JOIN fuel_types ON fuel_tanks.fuel_type_id = fuel_types.id
     ORDER BY pumps.id DESC
 ");
-$stmt->execute();
 
+$stmt->execute();
 $pumps = $stmt->fetchAll();
 ?>
 
@@ -26,17 +33,8 @@ $pumps = $stmt->fetchAll();
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Pumps</h4>
-
-        <a href="create.php" class="btn btn-primary btn-sm">
-            + Add Pump
-        </a>
+        <a href="create.php" class="btn btn-primary btn-sm">+ Add Pump</a>
     </div>
-
-    <?php if (empty($pumps)): ?>
-        <div class="alert alert-warning">
-            No pumps found. Please add a pump.
-        </div>
-    <?php else: ?>
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -47,7 +45,9 @@ $pumps = $stmt->fetchAll();
                     <tr>
                         <th>ID</th>
                         <th>Pump Name</th>
+                        <th>Tank</th>
                         <th>Fuel Type</th>
+                        <th>Tank Stock</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -56,41 +56,23 @@ $pumps = $stmt->fetchAll();
                 <tbody>
 
                     <?php foreach ($pumps as $pump): ?>
+
                         <tr>
                             <td><?= $pump['id'] ?></td>
-
+                            <td><?= htmlspecialchars($pump['pump_name']) ?></td>
+                            <td><?= htmlspecialchars($pump['tank_name']) ?></td>
+                            <td><?= htmlspecialchars($pump['fuel_name']) ?></td>
+                            <td><?= number_format($pump['current_level'], 2) ?> L</td>
                             <td>
-                                <?= htmlspecialchars($pump['pump_name']) ?>
+                                <?= $pump['status'] ? 'Active' : 'Inactive' ?>
                             </td>
-
                             <td>
-                                <?= htmlspecialchars($pump['fuel_name']) ?>
-                            </td>
-
-                            <td>
-                                <?php if ($pump['status'] == 1): ?>
-                                    <span class="badge bg-success">Active</span>
-                                <?php else: ?>
-                                    <span class="badge bg-secondary">Inactive</span>
-                                <?php endif; ?>
-                            </td>
-
-                            <td class="d-flex gap-2">
-
-                                <a href="edit.php?id=<?= $pump['id'] ?>"
-                                   class="btn btn-warning btn-sm">
+                                <a href="edit.php?id=<?= $pump['id'] ?>" class="btn btn-warning btn-sm">
                                     Edit
                                 </a>
-
-                                <a href="delete.php?id=<?= $pump['id'] ?>"
-                                   class="btn btn-danger btn-sm"
-                                   onclick="return confirm('Are you sure you want to delete this pump?')">
-                                    Delete
-                                </a>
-
                             </td>
-
                         </tr>
+
                     <?php endforeach; ?>
 
                 </tbody>
@@ -99,8 +81,6 @@ $pumps = $stmt->fetchAll();
 
         </div>
     </div>
-
-    <?php endif; ?>
 
 </div>
 
