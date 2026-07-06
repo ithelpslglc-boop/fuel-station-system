@@ -36,6 +36,11 @@ if (session_status() === PHP_SESSION_NONE) {
             <i class="bi bi-droplet-half"></i>
             <span>Pumps</span>
         </a>
+        
+        <a href="<?= APP_URL ?>/modules/tanks/index.php">
+            <i class="bi bi-box-seam"></i>
+            <span>Tanks</span>
+        </a>
 
         <a href="<?= APP_URL ?>/modules/suppliers/index.php">
             <i class="bi bi-truck"></i>
