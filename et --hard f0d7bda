@@ -1,0 +1,15 @@
+[33me118d35[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m HEAD@{0}: reset: moving to e118d35
+[33mf0d7bda[m HEAD@{1}: commit: Upgraded dashboard with KPIs, weekly charts, and low fuel alerts
+[33m37c15f0[m HEAD@{2}: commit: Standardize form layouts and improve navigation UI
+[33mdbe4a48[m HEAD@{3}: commit: Improve UI with collapsible sidebar and standardize page layouts
+[33m94945c1[m HEAD@{4}: commit: Implement collapsible sidebar with responsive layout system
+[33m478cf57[m HEAD@{5}: commit: Add top navigation bar and move logout to header
+[33maec34f8[m HEAD@{6}: commit: Implement automatic fuel stock deduction and stock validation
+[33mfa51903[m HEAD@{7}: commit: Complete core management modules and dashboard
+[33m6c24284[m HEAD@{8}: commit: Add expense management module with full CRUD system
+[33m0c328ce[m HEAD@{9}: commit: Add sales module with fuel billing and receipt system
+[33m9b2b6a6[m HEAD@{10}: commit: Add edit and delete functionality for users module
+[33m8e88f59[m HEAD@{11}: commit: Add create user feature in user management module
+[33me118d35[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m HEAD@{12}: commit: Add user management module with black sidebar UI
+[33mb224e5a[m HEAD@{13}: commit: Add layout system with sidebar, header, footer v3.0
+[33m54c08a8[m HEAD@{14}: commit (initial): Initialize project structure and database config v3.0
